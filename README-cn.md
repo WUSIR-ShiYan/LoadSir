@@ -7,7 +7,8 @@ LoadSir
 
 [![](https://img.shields.io/badge/%20%20Android%20Arsenal%20%20-%20%20LoadSir%20%20-blue.svg)](https://android-arsenal.com/details/1/6227)
 [![](https://img.shields.io/badge/%20%20aar%20size-26KB-green.svg)](https://bintray.com/kingja/maven/loadsir#files/com%2Fkingja%2Floadsir%2Floadsir%2F1.2.0)
-[![](https://img.shields.io/github/release/KingJA/LoadSir.svg)](https://github.com/KingJA/LoadSir/releases)
+:point_right:[![](https://img.shields.io/github/release/KingJA/LoadSir.svg)](https://github.com/KingJA/LoadSir/releases):point_left:
+[![](https://img.shields.io/badge/preview-v1.2.2-orange.svg)](https://github.com/KingJA/LoadSir/tree/v1.2.2-pre)
 
 `LoadSir`是一个高效易用，低碳环保，扩展性良好的加载反馈页管理框架，在加载网络或其他数据时候，根据需求切换状态页面，
 可添加自定义状态页面，如加载中，加载失败，无数据，网络超时，如占位图，登录失效等常用页面。可配合网络加载框架，结合返回
@@ -23,6 +24,10 @@ LoadSir
 |:---:|:----:|:----:|
 |![](imgs/placeholder_activity.gif)|![](imgs/muitl_fragment.gif)|![](imgs/viewpage_fragment.gif)|
 
+下载 Demo
+---
+![](imgs/qcode_1.3.2.png)
+
 流程图
 ---
 <div align="center"><img src="imgs/LoadSir_flow.jpg"/></div>
@@ -37,6 +42,7 @@ LoadSir的功能及特点
 * :star:不需要设置枚举或者常量状态值，直接用状态页类类型(xxx.class)作为状态码
 * :star:可对单个状态页单独设置点击事件，根据返回boolean值覆盖或者结合OnReloadListener使用，如网络错误可跳转设置页
 * :star:无预设页面，低耦合，开发者随心配置
+* :star:可保留标题栏(Toolbar,titile view等)
 * 可设置重新加载点击事件(OnReloadListener)
 * 可自定义状态页(继承Callback类)
 * 可在子线程直接切换状态
@@ -54,7 +60,7 @@ LoadSir的使用，只需要简单的三步
 ### 添加依赖
 
 ```groovy
-compile 'com.kingja.loadsir:loadsir:1.2.0'
+compile 'com.kingja.loadsir:loadsir:1.3.2'
 ```
 
 ### 第一步：配置
@@ -200,14 +206,15 @@ LoadSir为了完全解耦，没有预设任何状态页，需要自己实现，�
 ```java
 public class CustomCallback extends Callback {
 
+    //填充布局
     @Override
     protected int onCreateView() {
         return R.layout.layout_custom;
     }
-
+    //当前Callback的点击事件，如果返回true则覆盖注册时的onReloa()，如果返回false则两者都执行，先执行onReloadEvent()。
     @Override
-    protected boolean onRetry(final Context context, View view) {
-        Toast.makeText(context.getApplicationContext(), "Hello mother fuck! :p", Toast.LENGTH_SHORT).show();
+    protected boolean onReloadEvent(final Context context, View view) {
+        Toast.makeText(context.getApplicationContext(), "Hello buddy! :p", Toast.LENGTH_SHORT).show();
         (view.findViewById(R.id.iv_gift)).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -216,23 +223,79 @@ public class CustomCallback extends Callback {
         });
         return true;
     }
+
+    //是否在显示Callback视图的时候显示原始图(SuccessView)，返回true显示，false隐藏
+    @Override
+    public boolean getSuccessVisible() {
+        return super.getSuccessVisible();
+    }
+
+    //将Callback添加到当前视图时的回调，View为当前Callback的布局View
+    @Override
+    public void onAttach(Context context, View view) {
+        super.onAttach(context, view);
+    }
+
+    //将Callback从当前视图删除时的回调，View为当前Callback的布局View
+    @Override
+    public void onDetach() {
+        super.onDetach(context, view);
+    }
+
 }
 ```
+### 动态修改Callback
+
+```java
+loadService = LoadSir.getDefault().register(...);
+loadService.setCallBack(EmptyCallback.class, new Transport() {
+   @Override
+   public void order(Context context, View view) {
+       TextView mTvEmpty = (TextView) view.findViewById(R.id.tv_empty);
+       mTvEmpty.setText("fine, no data. You must fill it!");
+   }
+});
+```
+
+### LoadSir自带便携式Callback
+
+```java
+ProgressCallback loadingCallback = new ProgressCallback.Builder()
+        .setTitle("Loading", R.style.Hint_Title)
+        .build();
+
+HintCallback hintCallback = new HintCallback.Builder()
+        .setTitle("Error", R.style.Hint_Title)
+        .setSubTitle("Sorry, buddy, I will try it again.")
+        .setHintImg(R.drawable.error)
+        .build();
+
+LoadSir loadSir = new LoadSir.Builder()
+        .addCallback(loadingCallback)
+        .addCallback(hintCallback)
+        .setDefaultCallback(ProgressCallback.class)
+        .build();
+```
+
+在使用过程中，遇到问题可以先去[FAQ](docs/FAQ.md)和Issues看看有没解决方案，如果没有的话，请给我提Issue吧。
+
+
+### :bulb: About placeholder effect
+placeholder效果状态页类似[ShimmerRecyclerView](https://github.com/sharish/ShimmerRecyclerView)的效果. LoadSir只用了一个
+自定义状态页PlaceHolderCallback就完成类似的效果，是不是很棒 :ghost:
+
+## Docs
+* :point_right: [常见问题](docs/FAQ-cn.md)
+* 📌 [更新日志](docs/changelog.md)
+* [最佳实践](docs/BestPractice-cn.md)
+* [下个版本开发计划](docs/NextVersion.md)
+
 ## 代码混淆
 
 ```xml
 -dontwarn com.kingja.loadsir.**
 -keep class com.kingja.loadsir.** {*;}
 ```
-
-### :bulb: About placeholder effect
-placeholder效果状态页类似[ShimmerRecyclerView](https://github.com/sharish/ShimmerRecyclerView)的效果. LoadSir只用了一个
-自定义状态页PlaceHolderCallback就完成类似的效果，是不是很棒 :ghost:
-
-
-## Changelog
-
-[V1.2.0](docs/changelog.md)
 
 ## Contact Me
 Any questions,Welcome to contact me.

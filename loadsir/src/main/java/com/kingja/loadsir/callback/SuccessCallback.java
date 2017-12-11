@@ -19,4 +19,20 @@ public class SuccessCallback extends Callback {
     protected int onCreateView() {
         return 0;
     }
+
+    /**
+     * @deprecated Use {@link #showWithCallback(boolean successVisible)} instead.
+     */
+    public void hide() {
+        obtainRootView().setVisibility(View.GONE);
+    }
+
+    public void show() {
+        obtainRootView().setVisibility(View.VISIBLE);
+    }
+
+    public void showWithCallback(boolean successVisible) {
+        obtainRootView().setVisibility(successVisible ? View.VISIBLE : View.GONE);
+    }
+
 }

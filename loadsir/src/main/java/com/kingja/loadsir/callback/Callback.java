@@ -5,7 +5,6 @@ import android.view.View;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
@@ -21,6 +20,7 @@ public abstract class Callback implements Serializable {
     private View rootView;
     private Context context;
     private OnReloadListener onReloadListener;
+    private boolean successViewVisible;
 
     public Callback() {
     }
@@ -43,11 +43,18 @@ public abstract class Callback implements Serializable {
         if (resId == 0 && rootView != null) {
             return rootView;
         }
-        rootView = View.inflate(context, onCreateView(), null);
+
+        if (onBuildView(context) != null) {
+            rootView = onBuildView(context);
+        }
+
+        if (rootView == null) {
+            rootView = View.inflate(context, onCreateView(), null);
+        }
         rootView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (onRetry(context, rootView)) {
+                if (onReloadEvent(context, rootView)) {
                     return;
                 }
                 if (onReloadListener != null) {
@@ -55,37 +62,92 @@ public abstract class Callback implements Serializable {
                 }
             }
         });
+        onViewCreate(context, rootView);
         return rootView;
     }
 
+    protected View onBuildView(Context context) {
+        return null;
+    }
+
+    /**
+     * if return true, the successView will be visible when the view of callback is attached.
+     */
+    public boolean getSuccessVisible() {
+        return successViewVisible;
+    }
+
+    void setSuccessVisible(boolean visible) {
+        this.successViewVisible = visible;
+    }
+
+    /**
+     * @deprecated Use {@link #onReloadEvent(Context context, View view)} instead.
+     */
     protected boolean onRetry(Context context, View view) {
+        return false;
+    }
+
+    protected boolean onReloadEvent(Context context, View view) {
         return false;
     }
 
     public Callback copy() {
         ByteArrayOutputStream bao = new ByteArrayOutputStream();
         ObjectOutputStream oos;
+        Object obj = null;
         try {
             oos = new ObjectOutputStream(bao);
             oos.writeObject(this);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        ByteArrayInputStream bis = new ByteArrayInputStream(bao.toByteArray());
-        ObjectInputStream ois;
-        Object obj = null;
-        try {
-            ois = new ObjectInputStream(bis);
+            oos.close();
+            ByteArrayInputStream bis = new ByteArrayInputStream(bao.toByteArray());
+            ObjectInputStream ois = new ObjectInputStream(bis);
             obj = ois.readObject();
+            ois.close();
         } catch (Exception e) {
             e.printStackTrace();
         }
         return (Callback) obj;
     }
 
-    public interface OnReloadListener {
+    /**
+     * @since 1.2.2
+     */
+    public View obtainRootView() {
+        if (rootView == null) {
+            rootView = View.inflate(context, onCreateView(), null);
+        }
+        return rootView;
+    }
+
+    public interface OnReloadListener extends Serializable {
         void onReload(View v);
     }
 
     protected abstract int onCreateView();
+
+    /**
+     * Called immediately after {@link #onCreateView()}
+     *
+     * @since 1.2.2
+     */
+    protected void onViewCreate(Context context, View view) {
+    }
+
+    /**
+     * Called when the rootView of Callback is attached to its LoadLayout.
+     *
+     * @since 1.2.2
+     */
+    public void onAttach(Context context, View view) {
+    }
+
+    /**
+     * Called when the rootView of Callback is removed from its LoadLayout.
+     *
+     * @since 1.2.2
+     */
+    public void onDetach() {
+    }
+
 }

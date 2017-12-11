@@ -8,9 +8,10 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.kingja.loadsir.callback.Callback;
-
 import com.kingja.loadsir.core.LoadService;
 import com.kingja.loadsir.core.LoadSir;
+
+import butterknife.ButterKnife;
 
 /**
  * Description:TODO
@@ -27,6 +28,7 @@ public abstract class BaseFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle
             savedInstanceState) {
         View rootView = View.inflate(getActivity(), onCreateFragmentView(), null);
+        ButterKnife.bind(this, rootView);
         mBaseLoadService = LoadSir.getDefault().register(rootView, new Callback.OnReloadListener() {
             @Override
             public void onReload(View v) {

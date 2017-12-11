@@ -1,6 +1,7 @@
 package sample.kingja.loadsir;
 
 import android.os.Handler;
+import android.os.Looper;
 
 import com.kingja.loadsir.callback.Callback;
 import com.kingja.loadsir.core.LoadService;
@@ -12,15 +13,20 @@ import com.kingja.loadsir.core.LoadService;
  * Email:kingjavip@gmail.com
  */
 public class PostUtil {
-    public static final int DELAY_TIME = 1000;
+    private static final int DELAY_TIME = 1000;
 
     public static void postCallbackDelayed(final LoadService loadService, final Class<? extends Callback> clazz) {
-        new Handler().postDelayed(new Runnable() {
+        postCallbackDelayed(loadService, clazz, DELAY_TIME);
+    }
+
+    public static void postCallbackDelayed(final LoadService loadService, final Class<? extends Callback> clazz, long
+            delay) {
+        new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
             @Override
             public void run() {
                 loadService.showCallback(clazz);
             }
-        }, DELAY_TIME);
+        }, delay);
     }
 
     public static void postSuccessDelayed(final LoadService loadService) {
@@ -28,7 +34,7 @@ public class PostUtil {
     }
 
     public static void postSuccessDelayed(final LoadService loadService, long delay) {
-        new Handler().postDelayed(new Runnable() {
+        new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
             @Override
             public void run() {
                 loadService.showSuccess();
